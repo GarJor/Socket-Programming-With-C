@@ -14,7 +14,7 @@
 #define TRUE   1
 #define FALSE  0
 #define PORT 5500
-#define MAXCLI 5
+#define MAXCLI 10
 
 int main(int argc , char *argv[]) {
     int opt = TRUE;
@@ -119,7 +119,7 @@ int main(int argc , char *argv[]) {
                     client_socket[i] = new_socket;
                     printf("Adding to list of sockets as %d\n" , i);
                     //send new connection greeting message
-                    message = "TEST kali v1.0 \r\n";
+                    message = "TEST kali v1.0 \n";
                     if( send(new_socket, message, strlen(message), 0) != strlen(message) ) {
                         perror("send");
                     }
@@ -131,7 +131,7 @@ int main(int argc , char *argv[]) {
 
                   printf("New socket connection (with fd %d) from %s will not be handled\n" , new_socket , inet_ntoa(address.sin_addr));
                   //send connection fail message
-                  message = "ERROR bussy v1.0 \r\n";
+                  message = "ERROR bussy v1.0 \n";
                   if( send(new_socket, message, strlen(message), 0) != strlen(message) ) {
                       perror("send");
                   }
@@ -169,13 +169,19 @@ int main(int argc , char *argv[]) {
                     buffer[valread] = '\0';
                     printf("CLIENT %d : %s \n", i ,buffer);
                     // send(sd , buffer , strlen(buffer) , 0 );
-                    if(strncmp(buffer,"SHOW",strlen("SHOW"))==0) {
-                      message = "EXECUTE uname -a && whoami";
-                      for (i = 0; i < MAXCLI; i++) {
-                        sd = client_socket[i];
-                        send(sd , message , strlen(message) , 0 );
-                      }
+                    int ndest = buffer[0]-'0';
+                    if(client_socket[ndest] == 0 ) send(sd , "ERROR\0" , strlen("ERROR\0") , 0 );
+                    else {
+                      char aux[1];
+                      sprintf(aux,"%d",i);
+                      buffer[0] = aux[0];
+                      // memcpy( buffer, &buffer[2], strlen(buffer) );
+                      send(client_socket[ndest] , buffer , strlen(buffer) , 0 );
+                      send(sd , "SENT\0" , strlen("SENT\0") , 0 );
+
                     }
+
+                    // }
 
                 }
 
